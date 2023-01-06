@@ -1,7 +1,7 @@
 version: '3'
 services:
   smtpserver:
-    image: "logantr/smtpserver:arm64"
+    image: "logantr/smtpserver:amd64"
     logging:
       driver: "json-file"
       options:
