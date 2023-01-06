@@ -39,7 +39,7 @@ services:
       - "smtpserver:172.18.0.2"
     restart: "on-failure:5"
   deepstack:
-    image: "deepquestai/deepstack:arm64-2022.01.1"
+    image: "deepquestai/deepstack:latest"
     logging:
       driver: "json-file"
       options:
