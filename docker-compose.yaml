@@ -1,0 +1,67 @@
+version: '3'
+services:
+  smtpserver:
+    image: "logantr/smtpserver:arm64"
+    logging:
+      driver: "json-file"
+      options:
+        max-file: 1
+        max-size: 100m
+    container_name: SMTP
+    ports:
+      - "8025:8025"
+      - "554:554"
+      - "8554:8554"
+      - "22:22"
+    networks:
+      camera_network:
+        ipv4_address: 172.18.0.2
+    environment:
+      - TELEGRAM_TOKEN=# Telegram API key anahtarını ekleyin.
+      - TELEGRAM_CHAT_ID=# Mesajların gönderileceği telegram grup chat_id' nizi ekleyin.
+      - DEEPSTACK_IP=172.18.0.3 # Sistemde kurulu olan deepstack ip adresini ekleyin.
+      - DEEPSTACK_PORT=5000 # Sistemde kurulu olan deepstack portunu ekleyin.
+      - STREAM_URL=# Canlı yayın bağlantı linkini telegram üzerinden alabilirsiniz.
+      - STREAM_KEY=# Canlı yayın bağlantı anahtarını telegram üzerinden alabilirsiniz.
+      - SERVER_PORT=8025 # Docker üzerinde çalışan sunucunuzun SMTP server portu.
+      - RTSP_URL=554/1 # Kamera sisteminize uygun RTSP link bağlantısını bulup ekleyin.
+      - SERVER_IP=172.18.0.2 # Docker üzerinde çalışan sunucunuzun SMTP server adresi.
+      - SERVER_USERNAME=# SMTP server'a bağlanabilmek için kameranızdaki mail ayarlarındaki server kullanıcı adı.
+      - SERVER_PASSWORD=# SMTP server'a bağlanabilmek için kameranızdaki mail ayarlarındaki server parola
+      - CAM_USERNAME=# Telegram üzerinden canlı yayın bağlantısını izleyebilmek için kamera kullanıcı adınızı ekleyin.
+      - CAM_PASSWORD=# Telegram üzerinden canlı yayın bağlantısını izleyebilmek için kamera şifrenizi ekleyin.
+      - DEVICE_REGEX=(((?<=Device [Nn]ame:.)|(?<=KAMERA ADI:)|(?<=name\\xa3\\xba)|(?<=Cihaz Ad\\xc4\\xb1:.))[.A-Z0-9-_]*) # Sunucunuzdan gelen mail'in body özelliği print edilmiştir, log kayıtlarından takip ederek cihaz adınızı bulacak uygun regex'i araya "," koyarak ekleyin.
+      - OBJECTS=person,cat,bird,dog,car # Altta girilen değerler bu liste içerisindeki sıralamaya göre olmalıdır. Olmasını istediğiniz objeleri ekleyin.
+      - CONFIDANCE=0.7,0.7,0.7,0.7,0.7 # Bir üst açıklamdaki bilgiyi dikkate alınız.
+    stdin_open: true
+    tty: true
+    extra_hosts:
+      - "smtpserver:172.18.0.2"
+    restart: "on-failure:5"
+  deepstack:
+    image: "deepquestai/deepstack:arm64-2022.01.1"
+    logging:
+      driver: "json-file"
+      options:
+        max-file: 1
+        max-size: 100m
+    networks:
+      camera_network:
+        ipv4_address: 172.18.0.3
+    extra_hosts:
+      - "deepstack:172.18.0.2"
+    container_name: DEEPSTACK
+    volumes:
+      - /opt/dpstack:/datastore
+    ports:
+      - "80:5000"
+    environment:
+      - VISION-DETECTION=True
+    restart: "on-failure:5"
+networks:
+  camera_network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.18.0.0/27
