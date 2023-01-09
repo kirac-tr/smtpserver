@@ -30,7 +30,7 @@ services:
       - SERVER_PASSWORD=# SMTP server'a bağlanabilmek için kameranızdaki mail ayarlarındaki server parola
       - CAM_USERNAME=# Telegram üzerinden canlı yayın bağlantısını izleyebilmek için kamera kullanıcı adınızı ekleyin.
       - CAM_PASSWORD=# Telegram üzerinden canlı yayın bağlantısını izleyebilmek için kamera şifrenizi ekleyin.
-      - DEVICE_REGEX=(((?<=Device [Nn]ame:.)|(?<=KAMERA ADI:)|(?<=name\\xa3\\xba)|(?<=Cihaz Ad\\xc4\\xb1:.))[.A-Z0-9-_]*) # Sunucunuzdan gelen mail'in body özelliği print edilmiştir, log kayıtlarından takip ederek cihaz adınızı bulacak uygun regex'i araya "," koyarak ekleyin.
+      - DEVICE_REGEX=(((?<=Device [Nn]ame:.)|(?<=KAMERA ADI:)|(?<=name\\xa3\\xba)|(?<=Cihaz Ad\\xc4\\xb1:.))[.A-Z0-9-_]*) # Sunucunuzdan gelen mail'in body özelliği print edilmiştir, log kayıtlarından takip ederek cihaz adınızı bulacak uygun regex'i ekleyin.
       - OBJECTS=person,cat,bird,dog,car # Altta girilen değerler bu liste içerisindeki sıralamaya göre olmalıdır. Olmasını istediğiniz objeleri ekleyin.
       - CONFIDANCE=0.7,0.7,0.7,0.7,0.7 # Bir üst açıklamdaki bilgiyi dikkate alınız.
     stdin_open: true
