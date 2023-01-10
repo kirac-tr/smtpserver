@@ -4,6 +4,7 @@ from deepstack_sdk import ServerConfig, Detection
 from aiosmtpd.smtp import AuthResult, LoginPassword
 import ipaddress, subprocess, schedule, asyncio, logging, requests, shlex, time, json, cv2, os, re
 
+
 bot_token         = os.environ['TELEGRAM_TOKEN']
 api_url           = f"https://api.telegram.org/bot{bot_token}"
 chat_id           = os.environ['TELEGRAM_CHAT_ID']
@@ -31,6 +32,7 @@ server_auth = {server_username.encode(): server_password.encode(),}
 
 logging.basicConfig(level = logging.INFO,
                     format = '%(asctime)s:%(levelname)s:%(name)s:%(message)s')
+
 detect_dict = {}
 for i in range(len(objects_list)):
     detect_dict[objects_list[i]] = confidance_list[i]
@@ -39,6 +41,64 @@ st_list = {
     "station": [
     ]
 }
+################################################## FACE DETECTION ##################################################
+
+def face_registeration(caption):
+    user_image = open(f"/server/user/{caption}.jpg","rb").read()
+    response = requests.post(f"http://{str(deepstack_ip)}:{str(deepstack_port)}/v1/vision/face/register",
+        files={"image":user_image},data={"userid":f"{caption}"}).json()
+    send_message(chat_id, text =f"Yeni kişi kaydedildi: {caption}")
+
+def face_recognition(file="image.jpg"):
+    image_data = open(file,"rb").read()
+    faces = requests.post(f"http://{str(deepstack_ip)}:{str(deepstack_port)}/v1/vision/face/list").json()
+    response = requests.post(f"http://{str(deepstack_ip)}:{str(deepstack_port)}/v1/vision/face/recognize",
+        files={"image":image_data},data={"min_confidence":confidance}).json()
+    for user in response["predictions"]:
+        if user['userid'] in faces['faces']:
+            text_caption = f"{user['userid']} {device_name} istasyonunda!!!"
+            send_Photo(chat_id, file, text_caption)
+    os.remove('image.jpg')
+
+def faces_listing():
+    user_list = []
+    faces = requests.post(f"http://{str(deepstack_ip)}:{str(deepstack_port)}/v1/vision/face/list").json()
+    f = faces['faces']
+    for u in f:
+        user_list.append(u)
+    result = '\n'.join(user_list)
+    send_message(chat_id, text=f"Kayıtlı Kişiler:\n{result}")
+
+def face_deleting(text_list):
+    user = text_list[1]+" "+text_list[2]
+    response = requests.post(f"http://{str(deepstack_ip)}:{str(deepstack_port)}/v1/vision/face/delete",
+        data={"userid":user}).json()
+    send_message(chat_id, f"{user} adlı kayıt silindi.")
+
+def send_message(chat_id, text):
+    data={'chat_id': chat_id, 'text': text}
+    req = requests.post(f"{api_url}/sendMessage",data=data)
+    return req.json()
+
+def send_photo(chat_id, file, text_caption):
+    data = {"chat_id": chat_id, "caption": text_caption}
+    api = f"{api_url}/sendPhoto"
+    with open(file, "rb") as image_file:
+        req = requests.post(api, data=data, files={"photo": image_file})
+    return req.json()
+
+def get_file(file_id, caption):
+    api = f"{api_url}/getFile"
+    r = requests.get(api, params={'file_id': file_id})
+    file_info = r.json()['result']
+    file_path = file_info['file_path']
+    file_url = f"https://api.telegram.org/file/bot{bot_token}/{file_path}"
+    r = requests.get(file_url)
+    with open(f"/server/user/{caption}.jpg", "wb") as f:
+        f.write(r.content)
+        f.close()
+    face_registeration(caption)
+####################################################################################################################    
 def records_file_remove():
     listing = os.listdir("/server/records")
     for file in listing:
@@ -120,7 +180,25 @@ def echo_all_updates(updates):
                     for video_file in listing:
                         if str.lower(video_file[:-4]) == i['ip']:
                             send_Video(bot_token, chat_id,video_file)
-        except KeyError as e:
+        except (KeyError, IndexError):
+            pass
+        try:
+            command_message = update['message']['text']
+            text_list = command_message.split(" ")
+            if command_message == "/list":
+                faces_listing()
+            if text_list[0] == "/remove":
+                face_deleting(text_list)
+            if update['message']['caption']:
+                pass
+        except (IndexError, KeyError):
+                pass
+        try:
+            photo   = update['message']['photo'][-1]
+            file_id = photo['file_id']
+            caption = update['message']['caption']
+            get_file(file_id,caption)
+        except (KeyError, IndexError):
             pass
         try:
             dataset = update['callback_query']['data']
@@ -252,9 +330,9 @@ class SMTPHandler:
                                     cv2.FONT_HERSHEY_SIMPLEX, 0.4,(255,255,255), 1)
                             cv2.imwrite("image.jpg",imgdr)
         try:
-            send_Photo('image.jpg', device_name, ip_address)
             os.remove('latest.jpg')
-            os.remove('image.jpg')
+            send_Photo('image.jpg', device_name, ip_address)
+            face_recognition('image.jpg')
         except FileNotFoundError:
             pass
         return '250 OK'
