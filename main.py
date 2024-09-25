@@ -22,6 +22,7 @@ cam_password      = os.environ['CAM_PASSWORD']
 device_regex      = os.environ['DEVICE_REGEX']
 objects           = os.environ['OBJECTS']
 confidance        = os.environ['CONFIDANCE']
+file_remove_time  = os.environ['FILE_REMOVE_TIME']
 objects_list      = objects.split(",")
 confidance_list   = confidance.split(",")
 station_list      = []
