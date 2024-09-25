@@ -33,6 +33,7 @@ services:
       - DEVICE_REGEX=(((?<=Device [Nn]ame:.)|(?<=KAMERA ADI:)|(?<=name\\xa3\\xba)|(?<=Cihaz Ad\\xc4\\xb1:.))[.A-Z0-9-_]*) # Sunucunuzdan gelen mail'in body özelliği print edilmiştir, log kayıtlarından takip ederek cihaz adınızı bulacak uygun regex'i ekleyin.
       - OBJECTS=person# Altta girilen değerler bu liste içerisindeki sıralamaya göre olmalıdır. Olmasını istediğiniz objeleri ekleyin.
       - CONFIDANCE=0.7 # Bir üst açıklamdaki bilgiyi dikkate alınız.
+      - FILE_REMOVE_TIME=""
     stdin_open: true
     tty: true
     extra_hosts:
