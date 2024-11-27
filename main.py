@@ -275,11 +275,11 @@ class SMTPHandler:
                 if (ctype == 'text/plain' or ctype == 'text/html'):
                     body = part.get_payload(decode=True)
                     ## warning!!! add the appropriate regex code for your system where desired
-                    device = re.search(device_regex, str(body))
-                    print("\nBody       :", body)
-                    print("\nDevice Name:", device[0])
-                    print("Remote IP  :", ip_address)
                     try:
+                        device = re.search(device_regex, str(body))
+                        print("\nBody       :", body)
+                        print("\nDevice Name:", device[0])
+                        print("Remote IP  :", ip_address)
                         device_name = device[0]
                         aDict = {
                                     'name':device_name,
